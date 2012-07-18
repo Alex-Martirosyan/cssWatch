@@ -1,0 +1,10 @@
+.b-block2 {
+    margin: 25px;
+    padding: 10px;
+    font-size: 20px;
+    font-family: verdana;
+    background: #bbb;
+    border: solid 1px #aaa;
+    border-radius: 3px;
+    display: inline-block;
+}

@@ -1,0 +1,17 @@
+
+h2 {
+    font-size: 20px;
+    font-weight: normal;
+    margin: 25px;
+}
+
+.b-block {
+    margin: 25px;
+    padding: 10px;
+    font-size: 20px;
+    font-family: verdana;
+    background: #aaa;
+    border: solid 1px #999;
+    border-radius: 15px;
+    display: inline-block;
+}
