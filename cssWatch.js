@@ -1,107 +1,105 @@
 /**
  * © 2012 Aleksej Martirosyan
  * Alex-Martirosyan@ya.ru
- */ 
- 
- var cssWatch = {  
-     /**
-      * Интервал проверки изменений css (в миллисекундах)
-      */
-     interValUpdate: 100,
-     
+ */
 
-/*------Дальше править не рекомендуется-----------------------------------------------------*/
+var cssWatch = {
+    updateInterval: 100, // interval to check for updates, msecs
 
-     arrayCssFiles: new Array(),
-     arrayLastModified: new Array(),
-     arrayCssObj: new Array(),
-     counter: 0,
-     
-     ajax: function (obj) {
-         var _this = this;
-         var request=null;
-         var lastModified = '';
-         
-         try {
-            request = new XMLHttpRequest();
-         } catch (e) {
-             try {
-                 request=new ActiveXObject("Msxml2.XMLHTTP");
-             } catch (e) {
-                 request=new ActiveXObject("Microsoft.XMLHTTP");
-             }
-         }
-         
-         var url = obj.url+'?_=' + Math.random();
-         request.onreadystatechange = function (text,text2) {
-             if (request.readyState == 4) {                
-                 lastModified = /Last-Modified[]?:([^\n]+)/ig.exec(request.getAllResponseHeaders());
-                 lastModified = lastModified[1];
-                 
-                 if (request.status == 200) {              
-                     _this.arrayCssObj[_this.counter].setAttribute('href',_this.arrayCssFiles[_this.counter]+'?_=' + Math.random());
-                     if (lastModified) {
-                         _this.arrayLastModified[_this.counter] = lastModified.replace(/^\s+/, '').replace(/\s+$/, '');
-                     }
-                 } 
+    arrayCssFiles: [], // paths to CSS files
+    arrayCssObj: [], // link[type="text/css"] nodes
+    arrayLastModified: [], // extracted from headers, used to properly form request headers
 
-                 setTimeout(function () {
-                     if (_this.counter < _this.arrayCssObj.length - 1) {
-                         _this.counter++;
-                         _this.loadCss();
-                     } else {
-                         _this.counter = 0;
-                         _this.loadCss();
-                     }                      
-                 },_this.interValUpdate);                 
-             }
-         };
+    counter: 0, // used to
 
-         request.open("HEAD", url, true);
+    ajax: function (settings) {
+        var _this = this,
+            request = null,
+            lastModified = '';
 
-         if (_this.arrayLastModified[_this.counter]) {
-             request.setRequestHeader("If-Modified-Since", _this.arrayLastModified[_this.counter]);
-         }
-         request.send(null);
-         
-         return request;         
-     },
+        try {
+           request = new XMLHttpRequest();
+        } catch (e) {
+            try {
+                request = new ActiveXObject('Msxml2.XMLHTTP');
+            } catch (e) {
+                request = new ActiveXObject('Microsoft.XMLHTTP');
+            }
+        }
 
-     parse : function () {   
-         var _this = this;
-         
-         var arrayLink = document.getElementsByTagName('link');
-         var arrayLinkLength = arrayLink.length;
-         
-         for (var i = 0; i < arrayLinkLength; i++) {
-             if (arrayLink[i].getAttribute('href').substr(-4) == '.css' && arrayLink[i].getAttribute('cssWatch') != 'no') {
-                 _this.arrayCssFiles[_this.arrayCssFiles.length] = arrayLink[i].getAttribute('href');
-                 _this.arrayCssObj[_this.arrayCssFiles.length - 1] = arrayLink[i];                 
-             }
-         }
+        var url = settings.url + '?_=' + Math.random();
+        request.onreadystatechange = function (text, text2) {
+            if (request.readyState == 4) {
+                if (request.status == 200) {
+                    lastModified = /Last-Modified:\s+([^\n]+)/ig.exec(request.getAllResponseHeaders());
+                    lastModified = lastModified[1];
 
-         if (_this.arrayCssFiles.length > 0) {
-             this.loadCss();
-         }
-      },
-      
-     loadCss: function () {
-          var _this = this;
-                 
-          this.ajax({url:_this.arrayCssFiles[_this.counter]});
-     },
-     
-     create: function () {       
-         var _this = this;
-         
-         if (document.readyState == 'complete') {
-             this.init();             
-         } else {
-             setTimeout(function () {
-                 _this.create();
-             },50);
-         }
+                    _this.arrayCssObj[_this.counter].setAttribute('href', _this.arrayCssFiles[_this.counter] + '?_=' + Math.random());
+                    if (lastModified) {
+                        _this.arrayLastModified[_this.counter] = lastModified.replace(/^\s+/, '').replace(/\s+$/, '');
+                    }
+                }
+
+                setTimeout(function () {
+                    if (_this.counter < _this.arrayCssObj.length - 1) {
+                        _this.counter++;
+                        _this.loadCss();
+                    } else {
+                        _this.counter = 0;
+                        _this.loadCss();
+                    }
+                }, _this.updateInterval);
+           }
+        };
+
+        request.open('HEAD', url, true);
+
+        if (_this.arrayLastModified[_this.counter]) {
+            request.setRequestHeader('If-Modified-Since', _this.arrayLastModified[_this.counter]);
+        }
+        request.send(null);
+
+        return request;
+    },
+
+    parse: function () {
+        var _this = this,
+            arrayLink = document.getElementsByTagName('link'),
+            arrayLinkLength = arrayLink.length,
+            linkItem;
+
+        for (var i = 0; i < arrayLinkLength; i++) {
+            linkItem = arrayLink[i];
+            if (linkItem.getAttribute('href').indexOf('.css') > -1 && linkItem.getAttribute('cssWatch') != 'no') {
+                _this.arrayCssFiles.push(linkItem.getAttribute('href'));
+                _this.arrayCssObj.push(linkItem);
+            }
+        }
+
+        if (_this.arrayCssFiles.length > 0) {
+            this.loadCss();
+        }
+    },
+
+    loadCss: function () {
+         this.ajax({url: this.arrayCssFiles[this.counter]});
+    },
+
+    create: function (updateInterval) {
+        var _this = this;
+
+        if (updateInterval) {
+            this.updateInterval = updateInterval;
+        }
+
+        if (document.readyState == 'complete') {
+            this.parse();
+        } else {
+            setTimeout(function () {
+                _this.create();
+            }, 50);
+        }
      }
  };
-  
- cssWatch.create();
+
+cssWatch.create();
