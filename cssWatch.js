@@ -67,7 +67,7 @@ var cssWatch = {
         return request;
     },
 
-    parse : function () {
+    parse: function () {
         var _this = this,
             arrayLink = document.getElementsByTagName('link'),
             arrayLinkLength = arrayLink.length,
@@ -96,7 +96,7 @@ var cssWatch = {
         var _this = this;
 
         if (document.readyState == 'complete') {
-            this.loadCss();
+            this.parse();
         } else {
             setTimeout(function () {
                 _this.create();
