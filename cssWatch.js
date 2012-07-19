@@ -35,10 +35,10 @@ var cssWatch = {
         var url = settings.url + '?_=' + Math.random();
         request.onreadystatechange = function (text, text2) {
             if (request.readyState == 4) {
-                lastModified = /Last-Modified[]?:([^\n]+)/ig.exec(request.getAllResponseHeaders());
-                lastModified = lastModified[1];
-
                 if (request.status == 200) {
+                    lastModified = /Last-Modified[]?:([^\n]+)/ig.exec(request.getAllResponseHeaders());
+                    lastModified = lastModified[1];
+
                     _this.arrayCssObj[_this.counter].setAttribute('href', _this.arrayCssFiles[_this.counter] + '?_=' + Math.random());
                     if (lastModified) {
                         _this.arrayLastModified[_this.counter] = lastModified.replace(/^\s+/, '').replace(/\s+$/, '');
