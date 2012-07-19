@@ -4,18 +4,13 @@
  */
 
 var cssWatch = {
-    /**
-     * Интервал проверки изменений css (в миллисекундах)
-     */
-     updateInterval: 100,
+    updateInterval: 100, // interval to check for updates, msecs
 
+    arrayCssFiles: [], // paths to CSS files
+    arrayCssObj: [], // link[type="text/css"] nodes
+    arrayLastModified: [], // extracted from headers, used to properly form request headers
 
-/*------Дальше править не рекомендуется-----------------------------------------------------*/
-
-    arrayCssFiles: [],
-    arrayLastModified: [],
-    arrayCssObj: [],
-    counter: 0,
+    counter: 0, // used to
 
     ajax: function (settings) {
         var _this = this,
@@ -36,7 +31,7 @@ var cssWatch = {
         request.onreadystatechange = function (text, text2) {
             if (request.readyState == 4) {
                 if (request.status == 200) {
-                    lastModified = /Last-Modified[]?:([^\n]+)/ig.exec(request.getAllResponseHeaders());
+                    lastModified = /Last-Modified:\s+([^\n]+)/ig.exec(request.getAllResponseHeaders());
                     lastModified = lastModified[1];
 
                     _this.arrayCssObj[_this.counter].setAttribute('href', _this.arrayCssFiles[_this.counter] + '?_=' + Math.random());
@@ -53,7 +48,7 @@ var cssWatch = {
                         _this.counter = 0;
                         _this.loadCss();
                     }
-                },_this.updateInterval);
+                }, _this.updateInterval);
            }
         };
 
@@ -75,9 +70,9 @@ var cssWatch = {
 
         for (var i = 0; i < arrayLinkLength; i++) {
             linkItem = arrayLink[i];
-            if (linkItem.getAttribute('href').substr(-4) == '.css' && linkItem.getAttribute('cssWatch') != 'no') {
-                _this.arrayCssFiles[_this.arrayCssFiles.length] = linkItem.getAttribute('href');
-                _this.arrayCssObj[_this.arrayCssFiles.length - 1] = linkItem;
+            if (linkItem.getAttribute('href').indexOf('.css') > -1 && linkItem.getAttribute('cssWatch') != 'no') {
+                _this.arrayCssFiles.push(linkItem.getAttribute('href'));
+                _this.arrayCssObj.push(linkItem);
             }
         }
 
@@ -87,13 +82,15 @@ var cssWatch = {
     },
 
     loadCss: function () {
-         var _this = this;
-
-         this.ajax({url:_this.arrayCssFiles[_this.counter]});
+         this.ajax({url: this.arrayCssFiles[this.counter]});
     },
 
-    create: function () {
+    create: function (updateInterval) {
         var _this = this;
+
+        if (updateInterval) {
+            this.updateInterval = updateInterval;
+        }
 
         if (document.readyState == 'complete') {
             this.parse();
