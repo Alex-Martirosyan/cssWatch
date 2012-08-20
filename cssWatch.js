@@ -4,11 +4,12 @@
  */
 
 var cssWatch = {
-    updateInterval: 100, // interval to check for updates, msecs
+    updateInterval: 300, // interval to check for updates, msecs
 
     arrayCssFiles: [], // paths to CSS files
     arrayCssObj: [], // link[type="text/css"] nodes
     arrayLastModified: [], // extracted from headers, used to properly form request headers
+    activ : true,
 
     counter: 0, // used to
 
@@ -41,7 +42,7 @@ var cssWatch = {
                 }
 
                 setTimeout(function () {
-                    if (_this.counter < _this.arrayCssObj.length - 1) {
+                    if (_this.counter < _this.arrayCssObj.length - 1) {
                         _this.counter++;
                         _this.loadCss();
                     } else {
@@ -82,7 +83,16 @@ var cssWatch = {
     },
 
     loadCss: function () {
-         this.ajax({url: this.arrayCssFiles[this.counter]});
+        var _this = this;
+        if (!this.activ) {
+            setTimeout(function () {
+                _this.loadCss();
+            }, 500);
+
+            return;
+        }
+
+        this.ajax({url: this.arrayCssFiles[this.counter]});
     },
 
     create: function (updateInterval) {
@@ -93,6 +103,16 @@ var cssWatch = {
         }
 
         if (document.readyState == 'complete') {
+
+            $(window).on('hashchange', function () {
+                if (window.location.hash.indexOf('cssWatch') > -1) {
+                    _this.activ = true;
+                } else {
+                    _this.activ = false;
+                }
+            });
+
+            $(window).trigger('hashchange');
             this.parse();
         } else {
             setTimeout(function () {
